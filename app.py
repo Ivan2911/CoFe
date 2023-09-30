@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import openai
 
 app = Flask(__name__)
-openai.api_key = "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"
+openai.api_key = "OPEANAI-API-KEY"
 
 
 # List to store feedbacks
