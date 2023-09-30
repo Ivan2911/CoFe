@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Feedback Analyzer for Mercedes-Benz</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <h1 class="text-center">CoFe - Conversational Feedback</h1>
+            <form id="feedbackForm" class="mt-4">
+                <div class="form-group">
+                    <label for="feedback">What do you believe we could change or implement to make our company more effective and enhance your experience working here?</label>
+                    <textarea id="feedback" name="feedback" rows="4" class="form-control"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+            <div id="results" class="mt-4">
+                <h2>Actionable Insights:</h2>
+                <p id="insights" class="text-info"></p>
+            </div>
+            <div id="refined_insights_section" style="display:none;">
+                <h2>Clarifying Questions:</h2>
+                <p id="clarifying_question" class="text-warning"></p>
+                
+                <div class="form-group">
+                    <label for="clarifying_answer">Your Answer:</label>
+                    <textarea id="clarifying_answer" name="clarifying_answer" rows="4" class="form-control"></textarea>
+                </div>
+                
+                <button id="refine_button" class="btn btn-success">Refine Insights</button>
+                
+                <h2>Refined Insights:</h2>
+                <p id="refined_insights" class="text-success"></p>
+            </div>
+            <div id="summary_section" class="mt-4">
+                <h2>Feedback Summary:</h2>
+                <p id="feedback_summary" class="text-light"></p>
+                <button id="get_summary_button" class="btn btn-info mt-2">Get Feedback Summary</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("feedbackForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        fetch("/analyze_feedback", {
+            method: "POST",
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("insights").innerText = data.insights;
+            document.getElementById("clarifying_question").innerText = data.clarifying_question;
+            
+            if (data.clarifying_question) {
+                document.getElementById("refined_insights_section").style.display = "block";
+                
+                document.getElementById("refine_button").addEventListener("click", function() {
+                    const clarifying_answer = document.getElementById("clarifying_answer").value;
+                    const refineData = new FormData();
+                    refineData.append("original_feedback", formData.get("feedback"));
+                    refineData.append("clarifying_answer", clarifying_answer);
+                    
+                    fetch("/refine_insights", {
+                        method: "POST",
+                        body: new URLSearchParams(refineData)
+                    })
+                    .then(response => response.json())
+                    .then(refined_data => {
+                        document.getElementById("refined_insights").innerText = refined_data.refined_insight;
+                    });
+                });
+                
+            } else {
+                document.getElementById("refined_insights_section").style.display = "none";
+            }
+        });
+    });
+
+    document.getElementById("get_summary_button").addEventListener("click", function() {
+        fetch("/get_feedback_summary")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("feedback_summary").innerText = data.summary;
+        });
+    });
+});
+</script>
+
+</body>
+</html>
